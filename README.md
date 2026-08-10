@@ -624,13 +624,13 @@ This project uses two separate Databricks Apps.
 ### MCP Server App
 
 ```text
-<ADD YOUR MCP DATABRICKS APP URL HERE>
+https://weather-mcp-server-agent-7474659615296236.aws.databricksapps.com/
 ```
 
 ### Dashboard App
 
 ```text
-<ADD YOUR DASHBOARD DATABRICKS APP URL HERE>
+https://weather-mcp-server-agent-7474659615296236.aws.databricksapps.com/
 ```
 
 ---
