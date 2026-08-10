@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Weather Prediction Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .error {
+            background: #ffe5e5;
+            padding: 15px;
+            border-radius: 6px;
+            color: #900;
+        }
+
+        .metric {
+            display: inline-block;
+            margin-right: 25px;
+            margin-bottom: 15px;
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 1.3rem;
+        }
+
+        .forecast-day {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .recommendation {
+            background: #eef6ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        pre {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Weather Prediction Dashboard</h1>
+
+    <div class="subtitle">
+        Open-Meteo weather data with simple forecast recommendations
+    </div>
+
+    <div class="card">
+
+        <form method="POST">
+
+            <label>Location</label>
+
+            <input
+                type="text"
+                name="location"
+                placeholder="Chicago, Austin, Seattle..."
+                value="{{ location }}"
+                required
+            >
+
+            <label>Action</label>
+
+            <select name="action">
+
+                <option value="current"
+                    {% if action == "current" %}selected{% endif %}>
+                    Current Weather
+                </option>
+
+                <option value="forecast"
+                    {% if action == "forecast" %}selected{% endif %}>
+                    Forecast
+                </option>
+
+                <option value="recommendation"
+                    {% if action == "recommendation" %}selected{% endif %}>
+                    Travel Recommendation
+                </option>
+
+            </select>
+
+            <label>Forecast Days</label>
+
+            <input
+                type="number"
+                name="days"
+                min="1"
+                max="7"
+                value="{{ days }}"
+            >
+
+            <label>Date for Recommendation</label>
+
+            <input
+                type="date"
+                name="date"
+                value="{{ date }}"
+            >
+
+            <button type="submit">
+                Get Weather
+            </button>
+
+        </form>
+
+    </div>
+
+
+    {% if error %}
+
+    <div class="error">
+        {{ error }}
+    </div>
+
+    {% endif %}
+
+
+    {% if result %}
+
+    <div class="card">
+
+        <h2>Results</h2>
+
+
+        {% if action == "current" %}
+
+            <h3>
+                {{ result.location }},
+                {{ result.country }}
+            </h3>
+
+            <div class="metric">
+                Temperature
+                <strong>{{ result.temperature_f }}°F</strong>
+            </div>
+
+            <div class="metric">
+                Feels Like
+                <strong>{{ result.feels_like_f }}°F</strong>
+            </div>
+
+            <div class="metric">
+                Humidity
+                <strong>{{ result.humidity_percent }}%</strong>
+            </div>
+
+            <div class="metric">
+                Wind
+                <strong>{{ result.wind_mph }} mph</strong>
+            </div>
+
+            <p>
+                Weather code:
+                {{ result.weather_code }}
+            </p>
+
+            <p>
+                Updated:
+                {{ result.as_of }}
+            </p>
+
+
+        {% elif action == "forecast" %}
+
+            <h3>
+                {{ result.location }},
+                {{ result.country }}
+            </h3>
+
+            {% for day in result.forecast %}
+
+            <div class="forecast-day">
+
+                <strong>{{ day.date }}</strong>
+
+                <p>
+                    High: {{ day.high_f }}°F
+                    |
+                    Low: {{ day.low_f }}°F
+                </p>
+
+                <p>
+                    Rain chance:
+                    {{ day.precipitation_probability }}%
+                </p>
+
+                <p>
+                    Max wind:
+                    {{ day.wind_mph }} mph
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+
+        {% elif action == "recommendation" %}
+
+            <h3>
+                {{ result.location }}
+                —
+                {{ result.date }}
+            </h3>
+
+            <p>
+                High:
+                {{ result.forecast.high_f }}°F
+            </p>
+
+            <p>
+                Low:
+                {{ result.forecast.low_f }}°F
+            </p>
+
+            <p>
+                Rain chance:
+                {{ result.forecast.precipitation_probability }}%
+            </p>
+
+            <div class="recommendation">
+
+                <strong>Recommendations</strong>
+
+                <ul>
+                    {% for item in result.recommendations %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+
+                <strong>Why?</strong>
+
+                <ul>
+                    {% for reason in result.reasons %}
+                    <li>{{ reason }}</li>
+                    {% endfor %}
+                </ul>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>
